@@ -1,0 +1,104 @@
+<svg width="200" height="150" viewBox="0 0 200 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="tiramisuBase" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8d6e63;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#5d4037;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3e2723;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="tiramisuLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fff8e1;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#ffecb3;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#ffcc02;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="mascarpone" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fffef7;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#f5f3e7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e8e5d5;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="cocoa" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#8d6e63;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#3e2723;stop-opacity:1" />
+    </linearGradient>
+    <radialGradient id="cocoaHighlight" cx="30%" cy="30%">
+      <stop offset="0%" style="stop-color:#a1887f;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#a1887f;stop-opacity:0" />
+    </radialGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="2" dy="4" stdDeviation="3" flood-color="#000000" flood-opacity="0.3"/>
+    </filter>
+  </defs>
+  
+  <!-- 배경 -->
+  <rect width="200" height="150" fill="#fafafa"/>
+  
+  <!-- 케이크 베이스 -->
+  <rect x="40" y="90" width="120" height="40" rx="12" fill="url(#tiramisuBase)" filter="url(#shadow)"/>
+  
+  <!-- 티라미수 레이어 1 (커피) -->
+  <rect x="45" y="85" width="110" height="18" rx="9" fill="url(#tiramisuBase)"/>
+  
+  <!-- 티라미수 레이어 2 (크림) -->
+  <rect x="50" y="80" width="100" height="18" rx="9" fill="url(#mascarpone)"/>
+  
+  <!-- 티라미수 토핑 -->
+  <rect x="55" y="75" width="90" height="15" rx="7" fill="url(#mascarpone)"/>
+  
+  <!-- 마스카포네 크림 파이핑 -->
+  <ellipse cx="60" cy="70" rx="8" ry="4" fill="url(#mascarpone)"/>
+  <ellipse cx="75" cy="68" rx="8" ry="4" fill="url(#mascarpone)"/>
+  <ellipse cx="90" cy="70" rx="8" ry="4" fill="url(#mascarpone)"/>
+  <ellipse cx="105" cy="68" rx="8" ry="4" fill="url(#mascarpone)"/>
+  <ellipse cx="120" cy="70" rx="8" ry="4" fill="url(#mascarpone)"/>
+  <ellipse cx="135" cy="68" rx="8" ry="4" fill="url(#mascarpone)"/>
+  
+  <!-- 코코아 파우더 -->
+  <g>
+    <!-- 코코아 1 -->
+    <circle cx="70" cy="65" r="1.5" fill="url(#cocoa)"/>
+    <circle cx="70" cy="64" r="0.5" fill="url(#cocoaHighlight)"/>
+    
+    <!-- 코코아 2 -->
+    <circle cx="85" cy="63" r="1" fill="url(#cocoa)"/>
+    <circle cx="85" cy="62" r="0.3" fill="url(#cocoaHighlight)"/>
+    
+    <!-- 코코아 3 -->
+    <circle cx="100" cy="65" r="1.5" fill="url(#cocoa)"/>
+    <circle cx="100" cy="64" r="0.5" fill="url(#cocoaHighlight)"/>
+    
+    <!-- 코코아 4 -->
+    <circle cx="115" cy="63" r="1" fill="url(#cocoa)"/>
+    <circle cx="115" cy="62" r="0.3" fill="url(#cocoaHighlight)"/>
+    
+    <!-- 코코아 5 -->
+    <circle cx="130" cy="65" r="1.5" fill="url(#cocoa)"/>
+    <circle cx="130" cy="64" r="0.5" fill="url(#cocoaHighlight)"/>
+  </g>
+  
+  <!-- 커피 빈 -->
+  <g>
+    <!-- 커피 빈 1 -->
+    <ellipse cx="65" cy="95" rx="4" ry="2" fill="url(#tiramisuBase)"/>
+    <ellipse cx="65" cy="94" rx="2" ry="1" fill="url(#cocoaHighlight)"/>
+    <path d="M63 94 L67 94" stroke="#3e2723" stroke-width="0.5"/>
+    
+    <!-- 커피 빈 2 -->
+    <ellipse cx="85" cy="100" rx="3" ry="2" fill="url(#tiramisuBase)"/>
+    <ellipse cx="85" cy="99" rx="1.5" ry="1" fill="url(#cocoaHighlight)"/>
+    <path d="M83 99 L87 99" stroke="#3e2723" stroke-width="0.5"/>
+    
+    <!-- 커피 빈 3 -->
+    <ellipse cx="105" cy="95" rx="4" ry="2" fill="url(#tiramisuBase)"/>
+    <ellipse cx="105" cy="94" rx="2" ry="1" fill="url(#cocoaHighlight)"/>
+    <path d="M103 94 L107 94" stroke="#3e2723" stroke-width="0.5"/>
+    
+    <!-- 커피 빈 4 -->
+    <ellipse cx="125" cy="100" rx="3" ry="2" fill="url(#tiramisuBase)"/>
+    <ellipse cx="125" cy="99" rx="1.5" ry="1" fill="url(#cocoaHighlight)"/>
+    <path d="M123 99 L127 99" stroke="#3e2723" stroke-width="0.5"/>
+    
+    <!-- 커피 빈 5 -->
+    <ellipse cx="145" cy="95" rx="4" ry="2" fill="url(#tiramisuBase)"/>
+    <ellipse cx="145" cy="94" rx="2" ry="1" fill="url(#cocoaHighlight)"/>
+    <path d="M143 94 L147 94" stroke="#3e2723" stroke-width="0.5"/>
+  </g>
+</svg>
