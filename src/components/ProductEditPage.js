@@ -1,23 +1,70 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
 
 const ProductEditPage = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  // 상품 목록 및 선택 상태
+  const [products, setProducts] = useState([]);
+  const [selectedProductId, setSelectedProductId] = useState(id || '');
+
   // 임시 상품 데이터 (나중에 백엔드에서 가져올 데이터)
   const [formData, setFormData] = useState({
-    id: 1,
     name: '딸기 생크림 케이크',
-    category: '생일케이크',
+    category: 'birthday',
     price: '35000',
-    originalPrice: '42000',
     stock: '15',
     description: '신선한 딸기와 부드러운 생크림의 완벽한 조화'
   });
 
-  const [imagePreview, setImagePreview] = useState('/images/strawberry-cake.svg');
+  const [imagePreview, setImagePreview] = useState('https://via.placeholder.com/200x150.png?text=Strawberry+Cake');
+  const [imageFile, setImageFile] = useState(null);
 
-  const categories = ['생일케이크', '웨딩케이크', '디저트', '시즌한정'];
+  // 상품 목록 불러오기
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const list = await productAPI.getProducts();
+        setProducts(Array.isArray(list) ? list : []);
+      } catch (error) {
+        console.error('상품 목록 조회 실패:', error);
+        setProducts([]);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  // 선택된 상품 정보 가져오기 (URL 파라미터 또는 선택값 기준)
+  useEffect(() => {
+    const fetchProduct = async () => {
+      const effectiveId = selectedProductId || id;
+      if (effectiveId) {
+        try {
+          const product = await productAPI.getProduct(effectiveId);
+          if (product) {
+            setFormData({
+              name: product.name || '',
+              category: product.category || 'birthday',
+              price: product.price?.toString() || '',
+              stock: product.stock?.toString() || '',
+              description: product.description || ''
+            });
+            if (product.image) {
+              setImagePreview(product.image);
+            }
+          }
+        } catch (error) {
+          console.error('상품 정보 조회 실패:', error);
+          // 에러 시 기본 데이터 유지
+        }
+      }
+      // id가 없으면 기본 데이터 유지 (새 상품처럼 작동)
+    };
+    fetchProduct();
+  }, [id, selectedProductId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,6 +77,7 @@ const ProductEditPage = () => {
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      setImageFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result);
@@ -41,25 +89,36 @@ const ProductEditPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
+    const effectiveId = selectedProductId || id;
+    if (!effectiveId) {
+      alert('상품 ID가 필요합니다. 상품 목록에서 수정할 상품을 선택해주세요.');
+      navigate('/product-delete');
+      return;
+    }
+    
     try {
       // FormData 생성
       const productData = new FormData();
       productData.append('name', formData.name);
       productData.append('category', formData.category);
       productData.append('price', formData.price);
-      productData.append('originalPrice', formData.originalPrice || '0');
       productData.append('stock', formData.stock);
       productData.append('description', formData.description);
       
-      // 백엔드 API 호출 (쿠키 자동 포함)
-      const response = await productAPI.updateProduct(formData.id, productData);
+      // 이미지 파일이 있으면 추가
+      if (imageFile) {
+        productData.append('image', imageFile);
+      }
       
-      console.log('상품 수정 성공:', response);
+      // 백엔드 API 호출 (쿠키 자동 포함)
+      await productAPI.updateProduct(effectiveId, productData);
+      
       alert('상품이 수정되었습니다!');
+      navigate('/cakes');
       
     } catch (error) {
       console.error('상품 수정 실패:', error);
-      alert(`상품 수정 실패: ${error.message}`);
+      alert(`상품 수정 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
   };
 
@@ -93,18 +152,30 @@ const ProductEditPage = () => {
           <form className="product-form" onSubmit={handleSubmit}>
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">상품명 *</label>
-                <input 
-                  type="text" 
-                  className="form-input" 
+                <label className="form-label">수정할 상품 선택 *</label>
+                <select
+                  className="form-input"
+                  value={selectedProductId}
+                  onChange={(e) => setSelectedProductId(e.target.value)}
+                >
+                  <option value="">상품을 선택하세요</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.id}>{p.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label">상품명</label>
+                <input
+                  type="text"
+                  className="form-input"
                   name="name"
                   value={formData.name}
-                  onChange={handleChange}
-                  required 
+                  disabled
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">카테고리 *</label>
+                <label className="form-label">카테고리</label>
                 <select 
                   className="form-input" 
                   name="category"
@@ -112,16 +183,17 @@ const ProductEditPage = () => {
                   onChange={handleChange}
                   required
                 >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
+                  <option value="birthday">생일케이크</option>
+                  <option value="wedding">웨딩케이크</option>
+                  <option value="dessert">디저트</option>
+                  <option value="seasonal">시즌한정</option>
                 </select>
               </div>
             </div>
 
             <div className="form-row">
               <div className="form-group">
-                <label className="form-label">판매가 *</label>
+                <label className="form-label">가격</label>
                 <input 
                   type="number" 
                   className="form-input" 
@@ -132,27 +204,16 @@ const ProductEditPage = () => {
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">정가</label>
+                <label className="form-label">재고 수량</label>
                 <input 
                   type="number" 
                   className="form-input" 
-                  name="originalPrice"
-                  value={formData.originalPrice}
+                  name="stock"
+                  value={formData.stock}
                   onChange={handleChange}
+                  required 
                 />
               </div>
-            </div>
-
-            <div className="form-group">
-              <label className="form-label">재고 수량 *</label>
-              <input 
-                type="number" 
-                className="form-input" 
-                name="stock"
-                value={formData.stock}
-                onChange={handleChange}
-                required 
-              />
             </div>
 
             <div className="form-group">
@@ -168,34 +229,38 @@ const ProductEditPage = () => {
 
             <div className="form-group">
               <label className="form-label">상품 이미지</label>
-              <div className="image-upload">
-                <div className="image-preview">
-                  <img src={imagePreview} alt="현재 이미지" />
-                  <input 
-                    type="file" 
-                    id="image-change"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    style={{ display: 'none' }}
-                  />
-                  <label htmlFor="image-change" className="btn secondary change-image-btn">
-                    이미지 변경
-                  </label>
-                </div>
+              <div className="image-preview">
+                <img src={imagePreview} alt="현재 이미지" />
+                <input 
+                  type="file" 
+                  id="image-change"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{ display: 'none' }}
+                />
+                <label htmlFor="image-change" className="btn secondary change-image-btn">
+                  이미지 변경
+                </label>
               </div>
             </div>
 
             <div className="form-actions">
-              <button type="button" className="btn secondary" onClick={() => window.history.back()}>취소</button>
+              <button 
+                type="button" 
+                className="btn secondary" 
+                onClick={() => navigate('/cakes')}
+              >
+                취소
+              </button>
               <button type="submit" className="btn kakao-primary">수정 완료</button>
             </div>
           </form>
         </section>
 
         <div className="demo-note">
-          <a className="link" href="/">메인 페이지 보기</a> · 
-          <a className="link" href="/product-register">상품 등록 보기</a> · 
-          <a className="link" href="/product-delete">상품 삭제 보기</a>
+          <Link to="/" className="link">메인 페이지 보기</Link> · 
+          <Link to="/product-register" className="link">상품 등록 보기</Link> · 
+          <Link to="/product-delete" className="link">상품 삭제 보기</Link>
         </div>
       </main>
     </div>

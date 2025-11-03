@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
 
 const ProductDeletePage = () => {
+  const navigate = useNavigate();
   // 임시 상품 데이터 (나중에 백엔드에서 가져올 데이터)
   const [products, setProducts] = useState([
     { id: 1, name: '딸기 생크림 케이크', price: 35000, stock: 15, image: 'https://i.pinimg.com/1200x/ad/62/12/ad6212628fa7ca2851db2f90bef2bf58.jpg', status: '판매중' },

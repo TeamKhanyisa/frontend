@@ -26,6 +26,7 @@ function App() {
             <Route path="/face-checkin" element={<FaceCheckinPage />} />
             <Route path="/product-register" element={<ProductRegisterPage />} />
             <Route path="/product-edit" element={<ProductEditPage />} />
+            <Route path="/product-edit/:id" element={<ProductEditPage />} />
             <Route path="/product-delete" element={<ProductDeletePage />} />
             <Route path="/admin-control" element={<AdminControlPage />} />
           </Routes>
