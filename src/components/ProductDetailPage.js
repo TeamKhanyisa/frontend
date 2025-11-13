@@ -2,11 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import Background from './Background';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ToastContainer';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { toasts, showSuccess, removeToast } = useToast();
   
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -175,7 +178,7 @@ const ProductDetailPage = () => {
         selectedSize,
         selectedFlavor
       });
-      alert('장바구니에 추가되었습니다!');
+      showSuccess('장바구니에 추가되었습니다! ✨', 2500);
     }
   };
 
@@ -194,7 +197,14 @@ const ProductDetailPage = () => {
         <Background />
         <main className="container">
           <section className="card">
-            <div className="loading">상품 정보를 불러오는 중...</div>
+            <div className="loading-skeleton">
+              <div className="skeleton-image-large"></div>
+              <div className="skeleton-content-large">
+                <div className="skeleton-line skeleton-title-large"></div>
+                <div className="skeleton-line skeleton-description-large"></div>
+                <div className="skeleton-line skeleton-price-large"></div>
+              </div>
+            </div>
           </section>
         </main>
       </div>
@@ -218,6 +228,7 @@ const ProductDetailPage = () => {
   return (
     <div className="App">
       <Background />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       
       <main className="container">
         {/* Breadcrumb Navigation */}

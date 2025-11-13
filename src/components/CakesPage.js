@@ -3,10 +3,14 @@ import { useNavigate, Link } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
 import { useCart } from '../contexts/CartContext';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ToastContainer';
+import { SkeletonGrid } from './SkeletonLoader';
 
 const CakesPage = () => {
   const navigate = useNavigate();
   const { addToCart, getTotalItems } = useCart();
+  const { toasts, showSuccess, removeToast } = useToast();
   const [activeFilter, setActiveFilter] = useState('전체');
   const [searchQuery, setSearchQuery] = useState('');
   const [products, setProducts] = useState([]);
@@ -94,16 +98,17 @@ const CakesPage = () => {
 
   const handleAddToCart = (product) => {
     addToCart(product);
-    alert(`${product.name}이(가) 장바구니에 추가되었습니다!`);
+    showSuccess(`${product.name}이(가) 장바구니에 추가되었습니다! ✨`, 2500);
   };
 
 
   return (
     <div className="App">
       <Background />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       
-      {/* 장바구니 버튼 (고정 위치) */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* 장바구니 버튼 (오른쪽 하단 고정) */}
+      <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
         <Link
           to="/cart"
           className="relative bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group"
@@ -189,9 +194,13 @@ const CakesPage = () => {
 
           <div className="products-grid">
             {loading ? (
-              <div className="loading-message">상품을 불러오는 중...</div>
+              <SkeletonGrid count={6} />
             ) : filteredProducts.length === 0 ? (
-              <div className="empty-message">검색 결과가 없습니다.</div>
+              <div className="empty-state">
+                <div className="empty-icon">🔍</div>
+                <h3>검색 결과가 없습니다</h3>
+                <p>다른 검색어를 시도해보세요</p>
+              </div>
             ) : (
               filteredProducts.map((product) => (
               <div key={product.id} className="product-card">
@@ -200,7 +209,7 @@ const CakesPage = () => {
                   onClick={() => navigate(`/product/${product.id}`)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <img src={product.image} alt={product.name} />
+                  <img src={product.image} alt={product.name} loading="lazy" />
                   {product.badge && (
                     <div className={`product-badge ${product.badge === 'NEW' ? 'new' : ''}`}>
                       {product.badge}

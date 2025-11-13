@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Background from './Background';
 import { useCart } from '../contexts/CartContext';
+import { useToast } from '../hooks/useToast';
+import ToastContainer from './ToastContainer';
 
 const CartPage = () => {
   const { items: cartItems, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
+  const { toasts, showSuccess, showError, removeToast } = useToast();
   const [selectedItems, setSelectedItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('card');
 
@@ -28,8 +31,12 @@ const CartPage = () => {
   };
 
   const handleRemoveItem = (id) => {
+    const item = cartItems.find(item => item.id === id);
     removeFromCart(id);
     setSelectedItems(prev => prev.filter(itemId => itemId !== id));
+    if (item) {
+      showSuccess(`${item.name}이(가) 장바구니에서 제거되었습니다`, 2500);
+    }
   };
 
   const handleItemSelect = (id) => {
@@ -55,13 +62,12 @@ const CartPage = () => {
   };
 
   const selectedTotal = getSelectedTotal();
-  const shippingFee = selectedTotal >= 50000 ? 0 : 3000;
-  const discount = 10000; // 예시 할인
-  const finalPrice = selectedTotal + shippingFee - discount;
+  const finalPrice = selectedTotal;
 
   return (
     <div className="App">
       <Background />
+      <ToastContainer toasts={toasts} removeToast={removeToast} />
       
       <main className="container">
         {/* Header Section */}
@@ -163,14 +169,6 @@ const CartPage = () => {
               <span>상품 금액</span>
               <span>₩{formatPrice(selectedTotal)}</span>
             </div>
-            <div className="summary-row">
-              <span>배송비</span>
-              <span>{shippingFee === 0 ? '무료' : `₩${formatPrice(shippingFee)}`}</span>
-            </div>
-            <div className="summary-row">
-              <span>할인</span>
-              <span className="discount">-₩{formatPrice(discount)}</span>
-            </div>
             
             <div className="summary-divider"></div>
             
@@ -182,6 +180,13 @@ const CartPage = () => {
             <button 
               className="btn kakao-primary checkout-btn"
               disabled={selectedItems.length === 0}
+              onClick={() => {
+                if (selectedItems.length === 0) {
+                  showError('주문할 상품을 선택해주세요', 2500);
+                } else {
+                  showSuccess('주문이 완료되었습니다! 🎉', 3000);
+                }
+              }}
             >
               주문하기
             </button>

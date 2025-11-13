@@ -1,8 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProductRegisterPage = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
     category: '',
@@ -16,6 +20,16 @@ const ProductRegisterPage = () => {
   const [imagePreview, setImagePreview] = useState(null);
 
   const categories = ['생일케이크', '웨딩케이크', '디저트', '시즌한정'];
+
+  // role 체크: admin이 아니면 접근 차단
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        alert('관리자만 접근할 수 있는 페이지입니다.');
+        navigate('/');
+      }
+    }
+  }, [user, loading, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,6 +96,22 @@ const ProductRegisterPage = () => {
       alert(`상품 등록 실패: ${errorMessage}`);
     }
   };
+
+  // admin이 아니면 아무것도 렌더링하지 않음
+  if (loading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="App">

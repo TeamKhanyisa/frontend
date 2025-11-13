@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProductEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   
   // 상품 목록 및 선택 상태
   const [products, setProducts] = useState([]);
@@ -36,6 +38,16 @@ const ProductEditPage = () => {
     };
     fetchProducts();
   }, []);
+
+  // role 체크: admin이 아니면 접근 차단
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        alert('관리자만 접근할 수 있는 페이지입니다.');
+        navigate('/');
+      }
+    }
+  }, [user, loading, navigate]);
 
   // 선택된 상품 정보 가져오기 (URL 파라미터 또는 선택값 기준)
   useEffect(() => {
@@ -121,6 +133,22 @@ const ProductEditPage = () => {
       alert(`상품 수정 실패: ${error.message || '알 수 없는 오류가 발생했습니다.'}`);
     }
   };
+
+  // admin이 아니면 아무것도 렌더링하지 않음
+  if (loading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="App">

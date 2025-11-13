@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
+import { useAuth } from '../contexts/AuthContext';
 
 const AdminControlPage = () => {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [pendingRequests, setPendingRequests] = useState([
     {
-      id: 1,
+      id: 1,   
       type: 'QR 체크인 요청',
       requester: '김고객님',
       time: '2분 전',
@@ -14,7 +17,7 @@ const AdminControlPage = () => {
     },
     {
       id: 2,
-      type: '얼굴인식 요청',
+      type: '얼굴등록 요청',
       requester: '이고객님',
       time: '5분 전',
       status: 'normal',
@@ -57,6 +60,32 @@ const AdminControlPage = () => {
   const handleEmergencyMode = () => {
     alert('긴급 모드가 활성화되었습니다. 모든 출입이 자동으로 승인됩니다.');
   };
+
+  // role 체크: admin이 아니면 접근 차단
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        alert('관리자만 접근할 수 있는 페이지입니다.');
+        navigate('/');
+      }
+    }
+  }, [user, loading, navigate]);
+
+  // admin이 아니면 아무것도 렌더링하지 않음
+  if (loading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="App">
@@ -108,7 +137,7 @@ const AdminControlPage = () => {
                 </svg>
               </div>
               <div className="status-content">
-                <h3>얼굴인식</h3>
+                <h3>얼굴등록</h3>
                 <p className="status-text online">정상 작동</p>
               </div>
             </div>
@@ -220,7 +249,7 @@ const AdminControlPage = () => {
         <div className="demo-note">
           <Link to="/" className="link">메인 페이지 보기</Link> · 
           <Link to="/qr-checkin" className="link">QR 체크인 보기</Link> · 
-          <Link to="/face-checkin" className="link">얼굴인식 체크인 보기</Link>
+          <Link to="/face-checkin" className="link">얼굴등록 체크인 보기</Link>
         </div>
       </main>
     </div>

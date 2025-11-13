@@ -2,9 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
 import { productAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const ProductDeletePage = () => {
   const navigate = useNavigate();
+  const { user, loading } = useAuth();
   // 임시 상품 데이터 (나중에 백엔드에서 가져올 데이터)
   const [products, setProducts] = useState([
     { id: 1, name: '딸기 생크림 케이크', price: 35000, stock: 15, image: 'https://i.pinimg.com/1200x/ad/62/12/ad6212628fa7ca2851db2f90bef2bf58.jpg', status: '판매중' },
@@ -29,6 +31,16 @@ const ProductDeletePage = () => {
       setSelectedProducts([...selectedProducts, id]);
     }
   };
+
+  // role 체크: admin이 아니면 접근 차단
+  useEffect(() => {
+    if (!loading) {
+      if (!user || user.role !== 'admin') {
+        alert('관리자만 접근할 수 있는 페이지입니다.');
+        navigate('/');
+      }
+    }
+  }, [user, loading, navigate]);
 
   // 백엔드에서 상품 목록 가져오기 (쿠키 자동 포함)
   useEffect(() => {
@@ -73,6 +85,22 @@ const ProductDeletePage = () => {
   const formatPrice = (price) => {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
+
+  // admin이 아니면 아무것도 렌더링하지 않음
+  if (loading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="App">

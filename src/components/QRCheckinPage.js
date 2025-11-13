@@ -1,47 +1,113 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
+import { qrAPI } from '../utils/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const QRCheckinPage = () => {
-  const [qrCode, setQrCode] = useState('');
-  const [codeNumber, setCodeNumber] = useState('#KH2024-001234');
-  const [validTime, setValidTime] = useState('5분');
-  const [generatedTime, setGeneratedTime] = useState('14:30');
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [qrCodeDataURL, setQrCodeDataURL] = useState(null);
+  const [keyInfo, setKeyInfo] = useState(null);
+  const [order, setOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  // QR 코드 새로고침 함수
-  const refreshQR = () => {
-    const newCodeNumber = `#KH2024-${Math.floor(Math.random() * 900000) + 100000}`;
-    setCodeNumber(newCodeNumber);
-    setGeneratedTime(new Date().toLocaleTimeString('ko-KR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }));
-  };
-
-  // QR 코드 패턴 생성
-  const generateQRPattern = () => {
-    const pattern = [];
-    for (let i = 0; i < 21; i++) {
-      const row = [];
-      for (let j = 0; j < 21; j++) {
-        // 랜덤하게 블랙/화이트 결정 (실제 QR 코드 패턴 시뮬레이션)
-        const isBlack = Math.random() > 0.5;
-        row.push(isBlack ? 'black' : '');
-      }
-      pattern.push(row);
-    }
-    return pattern;
-  };
-
-  const [qrPattern, setQrPattern] = useState(generateQRPattern());
-
+  // 로그인 체크
   useEffect(() => {
-    const interval = setInterval(() => {
-      setQrPattern(generateQRPattern());
-    }, 5000); // 5초마다 QR 코드 패턴 변경
+    if (!authLoading && !isAuthenticated) {
+      alert('로그인이 필요한 기능입니다.');
+      navigate('/');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
-    return () => clearInterval(interval);
+  // QR 코드 생성 함수
+  const generateQR = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await qrAPI.generatePrivateKeyQR();
+      
+      if (response.success && response.data) {
+        // QR 코드 이미지 URL 저장
+        if (response.data.qrCode?.dataURL) {
+          setQrCodeDataURL(response.data.qrCode.dataURL);
+        }
+        
+        // 키 정보 저장
+        if (response.data.keyInfo) {
+          setKeyInfo(response.data.keyInfo);
+        }
+        
+        // 주문 정보 저장
+        if (response.data.order) {
+          setOrder(response.data.order);
+        }
+      } else {
+        setError('QR 코드 생성에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('QR code generation error:', err);
+      setError(err.response?.data?.message || 'QR 코드 생성 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  // 컴포넌트 마운트 시 QR 코드 생성 (페이지 진입 시 자동 호출)
+  useEffect(() => {
+    if (isAuthenticated) {
+      generateQR();
+    }
+  }, [generateQR, isAuthenticated]);
+
+  // 날짜 포맷팅 함수
+  const formatDate = (dateString) => {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    return date.toLocaleString('ko-KR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // 만료 시간까지 남은 시간 계산
+  const getRemainingTime = (expiresAt) => {
+    if (!expiresAt) return '-';
+    const now = new Date();
+    const expires = new Date(expiresAt);
+    const diff = expires - now;
+    
+    if (diff <= 0) return '만료됨';
+    
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(minutes / 60);
+    
+    if (hours > 0) {
+      return `${hours}시간 ${minutes % 60}분`;
+    }
+    return `${minutes}분`;
+  };
+
+  // 로그인하지 않은 경우 아무것도 렌더링하지 않음
+  if (authLoading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="App">
@@ -72,52 +138,233 @@ const QRCheckinPage = () => {
         {/* QR Code Display Section */}
         <section className="card">
           <div className="qr-code-container">
-            <h2>임시 QR 코드</h2>
+            <h2>QR 코드</h2>
             <p className="qr-description">아래 QR 코드를 리더기에 스캔해주세요</p>
             
-            <div className="qr-code-display">
-              <div className="qr-code">
-                {/* 실제 QR 코드 패턴 시뮬레이션 */}
-                {qrPattern.map((row, rowIndex) => (
-                  <div key={rowIndex} className="qr-row">
-                    {row.map((cell, cellIndex) => (
-                      <div 
-                        key={cellIndex} 
-                        className={`qr-cell ${cell}`}
-                      ></div>
-                    ))}
-                  </div>
-                ))}
-                <div className="qr-center">
-                  <div className="qr-logo">K</div>
+            {error && (
+              <div style={{
+                padding: '1rem',
+                background: '#ff4444',
+                color: '#fff',
+                borderRadius: '8px',
+                marginBottom: '1rem',
+                textAlign: 'center'
+              }}>
+                {error}
+              </div>
+            )}
+
+            {loading ? (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '3rem',
+                flexDirection: 'column',
+                gap: '1rem'
+              }}>
+                <div style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '4px solid #f3f3f3',
+                  borderTop: '4px solid #FEE500',
+                  borderRadius: '50%',
+                  animation: 'rotate 1s linear infinite'
+                }}></div>
+                <p>QR 코드 생성 중...</p>
+              </div>
+            ) : qrCodeDataURL ? (
+              <>
+                <div className="qr-code-display" style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '1rem',
+                  background: '#fff',
+                  borderRadius: '8px',
+                  marginBottom: '1rem'
+                }}>
+                  <img 
+                    src={qrCodeDataURL} 
+                    alt="QR Code" 
+                    style={{
+                      maxWidth: '100%',
+                      height: 'auto',
+                      maxHeight: '400px',
+                      borderRadius: '8px'
+                    }}
+                  />
                 </div>
+                
+                {keyInfo && (
+                  <div className="qr-info" style={{
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    background: '#2a2a2a',
+                    borderRadius: '8px',
+                    border: '1px solid #3a3a3a'
+                  }}>
+                    <div className="info-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span className="info-label" style={{ color: '#aaaaaa' }}>거래 ID</span>
+                      <span className="info-value" style={{ color: '#ffffff', wordBreak: 'break-all', textAlign: 'right' }}>
+                        {keyInfo.transactionId || '-'}
+                      </span>
+                    </div>
+                    <div className="info-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span className="info-label" style={{ color: '#aaaaaa' }}>공개키</span>
+                      <span className="info-value" style={{ color: '#ffffff', wordBreak: 'break-all', textAlign: 'right', fontSize: '0.85rem' }}>
+                        {keyInfo.publicKey ? `${keyInfo.publicKey.substring(0, 20)}...` : '-'}
+                      </span>
+                    </div>
+                    <div className="info-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span className="info-label" style={{ color: '#aaaaaa' }}>생성시간</span>
+                      <span className="info-value" style={{ color: '#ffffff' }}>
+                        {formatDate(keyInfo.timestamp)}
+                      </span>
+                    </div>
+                    <div className="info-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span className="info-label" style={{ color: '#aaaaaa' }}>만료시간</span>
+                      <span className="info-value" style={{ color: '#ffffff' }}>
+                        {formatDate(keyInfo.expiresAt)}
+                      </span>
+                    </div>
+                    <div className="info-item" style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0'
+                    }}>
+                      <span className="info-label" style={{ color: '#aaaaaa' }}>남은 시간</span>
+                      <span className="info-value" style={{ 
+                        color: keyInfo.expiresAt && new Date(keyInfo.expiresAt) > new Date() ? '#4CAF50' : '#ff4444',
+                        fontWeight: '600'
+                      }}>
+                        {getRemainingTime(keyInfo.expiresAt)}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {order && (
+                  <div style={{
+                    marginBottom: '1rem',
+                    padding: '1rem',
+                    background: '#1a1a1a',
+                    borderRadius: '8px',
+                    border: '1px solid #3a3a3a'
+                  }}>
+                    <h3 style={{ color: '#ffffff', marginBottom: '0.75rem', fontSize: '1rem' }}>주문 정보</h3>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span style={{ color: '#aaaaaa' }}>주문 번호</span>
+                      <span style={{ color: '#ffffff' }}>#{order.id}</span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span style={{ color: '#aaaaaa' }}>박스 번호</span>
+                      <span style={{ color: '#ffffff' }}>{order.boxNumber || '-'}</span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span style={{ color: '#aaaaaa' }}>총 금액</span>
+                      <span style={{ color: '#ffffff', fontWeight: '600' }}>
+                        ₩{order.totalAmount?.toLocaleString('ko-KR') || '0'}
+                      </span>
+                    </div>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      padding: '0.5rem 0',
+                      borderBottom: '1px solid #3a3a3a'
+                    }}>
+                      <span style={{ color: '#aaaaaa' }}>상태</span>
+                      <span style={{ 
+                        color: order.status === 'pending' ? '#FEE500' : '#4CAF50',
+                        fontWeight: '600'
+                      }}>
+                        {order.status === 'pending' ? '대기 중' : order.status}
+                      </span>
+                    </div>
+                    {order.shippingAddress && (
+                      <div style={{
+                        padding: '0.5rem 0',
+                        borderBottom: '1px solid #3a3a3a'
+                      }}>
+                        <span style={{ color: '#aaaaaa', display: 'block', marginBottom: '0.25rem' }}>배송 주소</span>
+                        <span style={{ color: '#ffffff', wordBreak: 'break-all' }}>
+                          {order.shippingAddress}
+                        </span>
+                      </div>
+                    )}
+                    {order.notes && (
+                      <div style={{
+                        padding: '0.5rem 0'
+                      }}>
+                        <span style={{ color: '#aaaaaa', display: 'block', marginBottom: '0.25rem' }}>요청사항</span>
+                        <span style={{ color: '#ffffff', wordBreak: 'break-all' }}>
+                          {order.notes}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#aaaaaa'
+              }}>
+                QR 코드를 생성할 수 없습니다.
               </div>
-            </div>
-            
-            <div className="qr-info">
-              <div className="info-item">
-                <span className="info-label">코드 번호</span>
-                <span className="info-value">{codeNumber}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">유효시간</span>
-                <span className="info-value">{validTime}</span>
-              </div>
-              <div className="info-item">
-                <span className="info-label">생성시간</span>
-                <span className="info-value">{generatedTime}</span>
-              </div>
-            </div>
+            )}
             
             <button 
               className="btn kakao-primary refresh-qr"
-              onClick={refreshQR}
+              onClick={generateQR}
+              disabled={loading}
+              style={{
+                width: '100%',
+                opacity: loading ? 0.6 : 1,
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
             >
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
                 <path d="M1 4v6h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              QR 코드 새로고침
+              {loading ? '생성 중...' : 'QR 코드 새로고침'}
             </button>
           </div>
 
@@ -164,7 +411,7 @@ const QRCheckinPage = () => {
 
         <div className="demo-note">
           <Link to="/" className="link">메인 페이지 보기</Link> · 
-          <Link to="/face-checkin" className="link">얼굴인식 체크인 보기</Link> · 
+          <Link to="/face-checkin" className="link">얼굴등록 체크인 보기</Link> · 
           <Link to="/admin-control" className="link">관리자 원격 제어 보기</Link>
         </div>
       </main>

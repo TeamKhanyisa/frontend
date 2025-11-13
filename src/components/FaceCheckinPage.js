@@ -1,30 +1,106 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
+import { useAuth } from '../contexts/AuthContext';
 
 const FaceCheckinPage = () => {
+  const { isAuthenticated, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [isScanning, setIsScanning] = useState(true);
-  const [scanStatus, setScanStatus] = useState('얼굴인식 진행 중...');
+  const [scanStatus, setScanStatus] = useState('카메라를 시작하는 중...');
+  const [cameraError, setCameraError] = useState(null);
+  const videoRef = useRef(null);
+  const streamRef = useRef(null);
+
+  // 로그인 체크
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      alert('로그인이 필요한 기능입니다.');
+      navigate('/');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   useEffect(() => {
-    // 얼굴인식 시뮬레이션
+    // 로그인하지 않은 경우 카메라 시작하지 않음
+    if (!isAuthenticated) {
+      return;
+    }
+
+    // 카메라 스트림 시작
+    const startCamera = async () => {
+      try {
+        setCameraError(null);
+        setScanStatus('카메라를 시작하는 중...');
+        
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            facingMode: 'user' // 전면 카메라 사용
+          },
+          audio: false
+        });
+
+        streamRef.current = stream;
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          setScanStatus('얼굴을 등록하고 있습니다...');
+        }
+      } catch (error) {
+        console.error('카메라 접근 오류:', error);
+        setCameraError('카메라에 접근할 수 없습니다. 카메라 권한을 확인해주세요.');
+        setScanStatus('카메라 접근 실패');
+      }
+    };
+
+    startCamera();
+
+    // 얼굴등록 시뮬레이션
     const scanningInterval = setInterval(() => {
-      const statuses = [
-        '얼굴을 인식하고 있습니다...',
-        '얼굴 특징을 분석 중...',
-        '신원을 확인하고 있습니다...',
-        '얼굴인식 진행 중...'
-      ];
-      const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
-      setScanStatus(randomStatus);
+      if (!cameraError) {
+        const statuses = [
+          '얼굴을 등록하고 있습니다...',
+          '얼굴 특징을 분석 중...',
+          '얼굴 정보를 저장 중...',
+          '얼굴등록 진행 중...'
+        ];
+        const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+        setScanStatus(randomStatus);
+      }
     }, 2000);
 
-    return () => clearInterval(scanningInterval);
-  }, []);
+    // 정리 함수
+    return () => {
+      if (!isAuthenticated) {
+        return;
+      }
+      clearInterval(scanningInterval);
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, [cameraError, isAuthenticated]);
 
-  const handleManualRequest = () => {
-    alert('관리자에게 출입요청이 전송되었습니다. 잠시만 기다려주세요.');
+  const handleFaceRegister = () => {
+    alert('얼굴 등록이 완료되었습니다.');
   };
+
+  // 로그인하지 않은 경우 아무것도 렌더링하지 않음
+  if (authLoading) {
+    return (
+      <div className="App">
+        <Background />
+        <main className="container">
+          <div style={{ textAlign: 'center', padding: '2rem' }}>로딩 중...</div>
+        </main>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="App">
@@ -44,94 +120,77 @@ const FaceCheckinPage = () => {
               </div>
               <div className="brand-text">
                 <div className="kakao-badge">KHAYISA</div>
-                <h1>얼굴인식 체크인</h1>
+                <h1>얼굴등록</h1>
               </div>
             </div>
             
-            <p className="subtitle">얼굴을 인식하여 입장하세요</p>
+            <p className="subtitle">얼굴을 등록하세요</p>
           </div>
         </section>
 
-        {/* Face Recognition Section */}
+        {/* Face Registration Section */}
         <section className="card">
           <div className="face-camera-container">
             <div className="face-camera">
               <div className="camera-frame">
-                <div className="face-overlay">
-                  <div className="face-outline">
-                    <div className="face-corners">
-                      <div className="face-guide"></div>
+                {cameraError ? (
+                  <div className="face-overlay">
+                    <div className="face-icon">
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" fill="currentColor"/>
+                      </svg>
                     </div>
+                    <div className="face-text">{cameraError}</div>
                   </div>
-                  <div className="face-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                      <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </div>
-                  <div className="face-text">얼굴을 프레임 안에 맞춰주세요</div>
-                </div>
+                ) : (
+                  <>
+                    <video
+                      ref={videoRef}
+                      autoPlay
+                      playsInline
+                      muted
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        borderRadius: '16px',
+                        transform: 'scaleX(-1)', // 미러 효과
+                      }}
+                    />
+                    <div className="face-overlay">
+                      <div className="face-outline">
+                        <div className="face-corners">
+                          <div className="face-guide"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
               
-              <div className="scanning-overlay">
-                <div className="scanning-dots">
-                  <div className="dot"></div>
-                  <div className="dot"></div>
-                  <div className="dot"></div>
+              {!cameraError && (
+                <div className="scanning-overlay">
+                  <div className="scanning-dots">
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                    <div className="dot"></div>
+                  </div>
+                  <div className="scanning-text">{scanStatus}</div>
                 </div>
-                <div className="scanning-text">{scanStatus}</div>
-              </div>
+              )}
             </div>
             
-            <div className="face-status">
-              <div className="status-indicator">
-                <div className="status-dot scanning"></div>
-                <span>{scanStatus}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Manual Request Option */}
-          <div className="manual-input-section">
-            <div className="divider">
-              <span>또는</span>
-            </div>
-            
-            <div className="manual-input">
-              <label className="form-label">관리자에게 출입요청을 보내세요</label>
-              <div className="request-info">
-                <p className="request-description">얼굴인식이 어려운 경우 관리자에게 직접 요청하실 수 있습니다</p>
-                <div className="request-details">
-                  <div className="detail-item">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M8 0L10.5 5.5H16L11.5 9L13 14.5L8 11L3 14.5L4.5 9L0 5.5H5.5L8 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>요청 후 관리자가 직접 문을 열어드립니다</span>
-                  </div>
-                  <div className="detail-item">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M8 0L10.5 5.5H16L11.5 9L13 14.5L8 11L3 14.5L4.5 9L0 5.5H5.5L8 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>평균 대기시간: 2-3분</span>
-                  </div>
-                  <div className="detail-item">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                      <path d="M8 0L10.5 5.5H16L11.5 9L13 14.5L8 11L3 14.5L4.5 9L0 5.5H5.5L8 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                    <span>24시간 관리자 대기 중</span>
-                  </div>
-                </div>
-              </div>
-              <button 
-                className="btn kakao-primary request-btn"
-                onClick={handleManualRequest}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 0L10.5 5.5H16L11.5 9L13 14.5L8 11L3 14.5L4.5 9L0 5.5H5.5L8 0Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-                관리자에게 출입요청 보내기
-              </button>
-            </div>
+          {/* Face Registration Button */}
+          <div className="manual-input-section" style={{ marginTop: '24px' }}>
+            <button 
+              className="btn kakao-primary request-btn"
+              onClick={handleFaceRegister}
+              style={{ width: '100%' }}
+            >
+              얼굴 등록하기
+            </button>
           </div>
         </section>
 

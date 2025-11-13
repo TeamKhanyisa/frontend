@@ -4,38 +4,45 @@ import Background from './Background';
 import LoginSection from './LoginSection';
 import QuickAccessSection from './QuickAccessSection';
 import AdminSection from './AdminSection';
+import HeroSection from './HeroSection';
+import FeaturedProducts from './FeaturedProducts';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const HomePage = () => {
   const { getTotalItems } = useCart();
+  const { isAuthenticated, user } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
   return (
     <div className="App">
       <Background />
       
-      {/* 장바구니 버튼 (고정 위치) */}
-      <div className="fixed top-4 right-4 z-50">
+      {/* 장바구니 버튼 (오른쪽 하단 고정) */}
+      <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
         <Link
           to="/cart"
-          className="relative bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group"
+          className="cart-fab"
           title="장바구니"
         >
-          <span className="text-xl">🛒</span>
+          <span className="cart-fab-icon">🛒</span>
           {getTotalItems() > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse">
+            <span className="cart-fab-badge">
               {getTotalItems()}
             </span>
           )}
-          <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 bg-gray-800 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <div className="cart-fab-tooltip">
             장바구니 ({getTotalItems()}개)
           </div>
         </Link>
       </div>
       
       <main className="container">
+        <HeroSection />
         <LoginSection />
+        <FeaturedProducts />
         <QuickAccessSection />
-        <AdminSection />
+        {isAuthenticated && isAdmin && <AdminSection />}
       </main>
     </div>
   );

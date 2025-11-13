@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const QuickAccessSection = () => {
   const { getTotalItems } = useCart();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   
   const quickAccessItems = [
     {
@@ -13,7 +16,8 @@ const QuickAccessSection = () => {
           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ),
-      label: '케이크 목록'
+      label: '케이크 목록',
+      requiresAuth: false
     },
     {
       to: '/cart',
@@ -25,7 +29,8 @@ const QuickAccessSection = () => {
         </svg>
       ),
       label: `장바구니 (${getTotalItems()}개)`,
-      badge: getTotalItems() > 0 ? getTotalItems() : null
+      badge: getTotalItems() > 0 ? getTotalItems() : null,
+      requiresAuth: false
     },
     {
       to: '/qr-checkin',
@@ -35,7 +40,8 @@ const QuickAccessSection = () => {
           <path d="M12 8V16M8 12H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ),
-      label: 'QR 체크인'
+      label: 'QR 체크인',
+      requiresAuth: true
     },
     {
       to: '/face-checkin',
@@ -45,25 +51,86 @@ const QuickAccessSection = () => {
           <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ),
-      label: '얼굴인식'
+      label: '얼굴등록',
+      requiresAuth: true
     }
   ];
 
+  const handleItemClick = (e, item) => {
+    if (item.requiresAuth && !isAuthenticated) {
+      e.preventDefault();
+      if (window.confirm('로그인이 필요한 기능입니다. 로그인 페이지로 이동하시겠습니까?')) {
+        navigate('/');
+      }
+    }
+  };
+
   return (
-    <section className="card">
-      <h2>빠른 접근</h2>
+    <section className="card quick-access-section">
+      <div className="section-header">
+        <div className="section-title-group">
+          <h2 className="section-title">빠른 접근</h2>
+          <p className="section-subtitle">원하는 기능을 빠르게 이용하세요</p>
+        </div>
+      </div>
       <div className="quick-access-grid">
-        {quickAccessItems.map((item, index) => (
-          <Link key={index} to={item.to} className="quick-access-item">
-            <div className="quick-icon">
-              {item.icon}
-              {item.badge && (
-                <span className="cart-badge">{item.badge}</span>
-              )}
-            </div>
-            <span>{item.label}</span>
-          </Link>
-        ))}
+        {quickAccessItems.map((item, index) => {
+          const isDisabled = item.requiresAuth && !isAuthenticated;
+          
+          return (
+            <Link 
+              key={index} 
+              to={item.to} 
+              className="quick-access-item"
+              onClick={(e) => handleItemClick(e, item)}
+              style={{
+                opacity: isDisabled ? 0.5 : 1,
+                cursor: isDisabled ? 'not-allowed' : 'pointer',
+                position: 'relative'
+              }}
+            >
+              <div className="quick-icon-wrapper">
+                <div className="quick-icon" style={{
+                  opacity: isDisabled ? 0.5 : 1
+                }}>
+                  {item.icon}
+                </div>
+                {item.badge && (
+                  <span className="quick-badge">{item.badge}</span>
+                )}
+                {isDisabled && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'rgba(0, 0, 0, 0.7)',
+                    color: '#fff',
+                    padding: '0.25rem 0.5rem',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                    whiteSpace: 'nowrap',
+                    zIndex: 10
+                  }}>
+                    로그인 필요
+                  </div>
+                )}
+              </div>
+              <span className="quick-label" style={{
+                opacity: isDisabled ? 0.5 : 1
+              }}>
+                {item.label}
+              </span>
+              <div className="quick-arrow" style={{
+                opacity: isDisabled ? 0.5 : 1
+              }}>
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M6 12l4-4-4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+            </Link>
+          );
+        })}
       </div>
     </section>
   );
