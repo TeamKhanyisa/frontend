@@ -1,0 +1,111 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  text-align: center;
+  padding: 10px;
+  box-sizing: border-box;
+}
+.primary-btn {
+  background-color: #00c78e;
+  border: none;
+  color: white;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  margin-top: 20px;
+  cursor: pointer;
+}
+.progress-bar {
+  width: 90%;
+  max-width: 480px;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: 10px;
+  margin-top: 20px;
+  overflow: hidden;
+}
+.progress {
+  height: 100%;
+  background-color: #00c78e;
+  transition: width 0.2s;
+}
+.warn {
+  color: red;
+  margin-top: 10px;
+}
+.verified-icon {
+  font-size: 60px;
+  margin-bottom: 16px;
+}
+
+/* 웹캠이 프레임 안에서 정확히 중앙에 오도록 */
+.face-camera-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+
+.face-camera {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  border-radius: 24px;
+  background: var(--glass);
+  border: 1px solid var(--glass-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.camera-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 280px;
+  height: 280px;
+  object-fit: cover;
+  transform: translate(-50%, -50%) scaleX(-1);
+  border-radius: 50%;
+  z-index: 1;
+}
+
+.camera-frame,
+.face-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 2;
+}
+
+.face-outline {
+  width: 280px;
+  height: 280px;
+  border: 2px dashed var(--accent);
+  border-radius: 50%;
+  pointer-events: none;
+}
+.face-overlay { position: relative; }
+.face-icon {
+  position: absolute;
+  bottom: -176px;   /* 원하는 만큼 원 밖으로 이동 */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.face-text {
+  position: relative;
+  font-size: 17px;
+  bottom: -200px; 
+  color: var(--muted);
+}
