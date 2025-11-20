@@ -60,12 +60,12 @@ const QRCheckinPage = () => {
       // 백엔드에서도 동일한 검증을 수행해야 함
       
       // QR 코드 생성 요청
-      const response = await qrAPI.generatePrivateKeyQR();
+      const response = await qrAPI.generatePaymentQR();
       
       // 백엔드에서 검증 실패 시 에러 응답 처리
       if (!response.success) {
         const errorMessage = response.message || 'QR 코드 생성에 실패했습니다.';
-        if (errorMessage.includes('박스 번호') || errorMessage.includes('boxNumber')) {
+        if (errorMessage.includes('박스 번호') || errorMessage.includes('boxNumber') || errorMessage.includes('상자번호')) {
           setError('박스 번호가 할당된 결제 내역이 없습니다. 관리자가 박스 번호를 할당한 후 QR 코드를 생성할 수 있습니다.');
         } else {
           setError(errorMessage);
@@ -75,19 +75,36 @@ const QRCheckinPage = () => {
       }
       
       if (response.success && response.data) {
-        // QR 코드 이미지 URL 저장
-        if (response.data.qrCode?.dataURL) {
-          setQrCodeDataURL(response.data.qrCode.dataURL);
+        // QR 코드 이미지 URL 저장 (백엔드 응답: response.data.qrCode는 Base64 dataURL)
+        if (response.data.qrCode) {
+          setQrCodeDataURL(response.data.qrCode);
         }
         
-        // 키 정보 저장
-        if (response.data.keyInfo) {
-          setKeyInfo(response.data.keyInfo);
+        // 키 정보 저장 (백엔드 응답: response.data.data에서 변환)
+        if (response.data.data) {
+          const qrData = response.data.data;
+          // 백엔드 응답 형식: { paymentId, userPublicKey, signature, expires }
+          // 프론트엔드 기대 형식: { transactionId, publicKey, timestamp, expiresAt }
+          setKeyInfo({
+            transactionId: qrData.signature || qrData.paymentId, // signature를 transactionId로 사용
+            publicKey: qrData.userPublicKey,
+            timestamp: new Date().toISOString(), // 현재 시간 사용
+            expiresAt: qrData.expires ? new Date(qrData.expires * 1000).toISOString() : null // Unix timestamp를 ISO 형식으로 변환
+          });
         }
         
-        // 주문 정보 저장
-        if (response.data.order) {
-          setOrder(response.data.order);
+        // 주문 정보는 백엔드 응답에 없으므로 결제 내역에서 가져오기
+        // (이미 위에서 payments를 조회했으므로, 가장 최근 결제를 사용)
+        if (payments.length > 0) {
+          const latestPayment = payments[0];
+          setOrder({
+            id: latestPayment.payment_id || latestPayment.id,
+            boxNumber: latestPayment.boxNumber || latestPayment.box_number,
+            totalAmount: latestPayment.amount,
+            status: latestPayment.status?.toLowerCase() || 'pending',
+            shippingAddress: latestPayment.shippingAddress || null,
+            notes: latestPayment.notes || null
+          });
         }
       } else {
         setError('QR 코드 생성에 실패했습니다.');
@@ -99,15 +116,29 @@ const QRCheckinPage = () => {
       if (err.response?.status === 400 || err.response?.status === 403) {
         // 400 또는 403 에러는 검증 실패로 간주
         const errorMessage = err.response?.data?.message || 'QR 코드 생성 조건을 만족하지 않습니다.';
-        if (errorMessage.includes('박스 번호') || errorMessage.includes('boxNumber')) {
+        if (errorMessage.includes('박스 번호') || errorMessage.includes('boxNumber') || errorMessage.includes('상자번호')) {
           setError('박스 번호가 할당된 결제 내역이 없습니다. 관리자가 박스 번호를 할당한 후 QR 코드를 생성할 수 있습니다.');
         } else {
           setError(errorMessage);
         }
       } else if (err.response?.status === 404) {
-        setError('결제 내역을 찾을 수 없습니다. 먼저 결제를 완료해주세요.');
+        const errorMessage = err.response?.data?.message || '결제 내역을 찾을 수 없습니다. 먼저 결제를 완료해주세요.';
+        if (errorMessage.includes('상자번호') || errorMessage.includes('박스 번호')) {
+          setError('박스 번호가 할당된 결제 내역이 없습니다. 관리자가 박스 번호를 할당한 후 QR 코드를 생성할 수 있습니다.');
+        } else {
+          setError(errorMessage);
+        }
+      } else if (err.response?.status === 401) {
+        const errorMessage = err.response?.data?.message || '인증에 실패했습니다.';
+        if (errorMessage.includes('공개키') || errorMessage.includes('등록되지 않은')) {
+          setError('서명용 공개키가 등록되지 않았습니다. 먼저 로그인해주세요.');
+        } else {
+          setError(errorMessage);
+        }
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
+      } else if (err.message) {
+        setError(err.message);
       } else {
         setError('QR 코드 생성 중 오류가 발생했습니다.');
       }

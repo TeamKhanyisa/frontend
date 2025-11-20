@@ -76,6 +76,41 @@ export const extractBase64FromPEM = (pemKey) => {
 };
 
 /**
+ * Base64 공개키를 PEM 형식으로 변환
+ * @param {string} base64Key - Base64 형식의 공개키
+ * @returns {string} PEM 형식의 공개키
+ */
+export const convertBase64ToPEM = (base64Key) => {
+  if (!base64Key) {
+    return '';
+  }
+
+  if (base64Key.includes('-----BEGIN')) {
+    return base64Key;
+  }
+
+  const base64WithLineBreaks = base64Key.match(/.{1,64}/g)?.join('\n') || base64Key;
+  return `-----BEGIN PUBLIC KEY-----\n${base64WithLineBreaks}\n-----END PUBLIC KEY-----`;
+};
+
+/**
+ * 공개키 문자열을 Base64 순수 문자열로 정규화
+ * @param {string} key - 공개키 (PEM 또는 Base64)
+ * @returns {string} 정규화된 Base64 공개키
+ */
+export const normalizePublicKeyBase64 = (key) => {
+  if (!key) {
+    return '';
+  }
+
+  if (key.includes('-----BEGIN')) {
+    return extractBase64FromPEM(key);
+  }
+
+  return key.replace(/\s/g, '');
+};
+
+/**
  * PEM 형식의 키 문자열을 CryptoKey로 복원
  * @param {string} pemKey - PEM 형식의 키 문자열
  * @param {boolean} isPrivate - 개인키 여부
@@ -624,6 +659,56 @@ export const signData = async (data) => {
   } catch (error) {
     console.error('데이터 서명 실패:', error);
     throw new Error('데이터 서명에 실패했습니다.');
+  }
+};
+
+/**
+ * 공개키 서명 JWT 생성 (QR 발급용)
+ * 백엔드의 authenticatePublicKeyJWT 미들웨어에서 사용
+ * @param {string} userPublicKey - 사용자 공개키 (Base64 형식)
+ * @returns {string} JWT 토큰 문자열
+ */
+export const createPublicKeyJWT = (userPublicKey) => {
+  try {
+    const normalizedBase64Key = normalizePublicKeyBase64(userPublicKey);
+    const pemPublicKey = convertBase64ToPEM(normalizedBase64Key);
+
+    if (!normalizedBase64Key || !pemPublicKey) {
+      throw new Error('유효한 공개키가 필요합니다.');
+    }
+
+    // JWT 헤더 (Base64 인코딩)
+    const header = {
+      alg: 'HS256',
+      typ: 'JWT'
+    };
+    const encodedHeader = btoa(JSON.stringify(header))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+
+    // JWT 페이로드 (Base64 인코딩)
+    const payload = {
+      userPublicKey: pemPublicKey,
+      userPublicKeyBase64: normalizedBase64Key,
+      iat: Math.floor(Date.now() / 1000) // 발급 시간
+    };
+    const encodedPayload = btoa(JSON.stringify(payload))
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+
+    // 서명 부분 (미들웨어에서 검증하지 않으므로 간단한 값 사용)
+    const signature = btoa('signature')
+      .replace(/=/g, '')
+      .replace(/\+/g, '-')
+      .replace(/\//g, '_');
+
+    // JWT 토큰 조합
+    return `${encodedHeader}.${encodedPayload}.${signature}`;
+  } catch (error) {
+    console.error('공개키 JWT 생성 실패:', error);
+    throw new Error('공개키 JWT 생성에 실패했습니다.');
   }
 };
 

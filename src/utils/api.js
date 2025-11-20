@@ -58,7 +58,7 @@ const axiosInstance = axios.create({
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = tokenManager.getAccessToken();
-    if (accessToken) {
+    if (accessToken && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
     // httpOnly 쿠키는 withCredentials: true로 자동 전송됨
@@ -290,10 +290,32 @@ export const productAPI = {
 // ==================== QR코드 관련 API ====================
 
 export const qrAPI = {
-  // 개인키 포함 QR코드 생성
-  generatePrivateKeyQR: async () => {
-    const response = await axiosInstance.post('/api/qr/generate-private-key');
+  // 결제 기반 QR코드 생성 (공개키 서명 JWT 사용)
+  generatePaymentQR: async () => {
+    // 공개키 서명 JWT 생성에 필요한 공개키 가져오기
+    const { getSigningPublicKey, createPublicKeyJWT } = await import('./crypto');
+    const publicKey = await getSigningPublicKey();
+    
+    if (!publicKey) {
+      throw new Error('서명용 공개키가 없습니다. 먼저 로그인해주세요.');
+    }
+
+    // 공개키 서명 JWT 생성
+    const publicKeyJWT = createPublicKeyJWT(publicKey);
+
+    // JWT를 Authorization 헤더에 포함하여 요청
+    const response = await axiosInstance.post('/api/qr/generate-payment', {}, {
+      headers: {
+        'Authorization': `Bearer ${publicKeyJWT}`
+      }
+    });
     return response.data;
+  },
+
+  // 개인키 포함 QR코드 생성 (레거시 - 사용하지 않음)
+  generatePrivateKeyQR: async () => {
+    // 새로운 엔드포인트로 리다이렉트
+    return await qrAPI.generatePaymentQR();
   },
 
   // 사용자 정의 QR코드 생성
