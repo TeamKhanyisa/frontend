@@ -3167,4 +3167,642 @@ select.form-input {
   }
 }
 
+/* ==================== Payment Complete Page ==================== */
+.payment-success {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.3);
+  animation: scaleIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.payment-success h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+
+.success-message {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 0;
+}
+
+.payment-details {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.payment-item {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s ease;
+}
+
+.payment-item:hover {
+  border-color: var(--accent);
+  background: rgba(99, 102, 241, 0.05);
+}
+
+.payment-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.payment-item-title-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.payment-item-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0;
+}
+
+.payment-id-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.payment-id-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.payment-id-value {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+}
+
+.payment-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+}
+
+.payment-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.info-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.payment-item-amount-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: rgba(99, 102, 241, 0.1);
+  border-radius: 12px;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+}
+
+.amount-label {
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.amount-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.paid {
+  background: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-badge.failed {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-badge.cancelled {
+  background: rgba(107, 114, 128, 0.2);
+  color: var(--muted);
+  border: 1px solid rgba(107, 114, 128, 0.3);
+}
+
+.payment-total {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 2px solid var(--glass-border);
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.total-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.total-amount {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gradient-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 얼굴등록 CTA 섹션 */
+.face-registration-cta {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+  border: 2px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+}
+
+.face-registration-cta::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%);
+  animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+.face-registration-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.face-registration-icon {
+  font-size: 64px;
+  margin-bottom: 16px;
+  animation: bounce 2s ease-in-out infinite;
+}
+
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.face-registration-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 12px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gradient-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.face-registration-message {
+  font-size: 16px;
+  color: var(--muted);
+  margin-bottom: 24px;
+  line-height: 1.6;
+}
+
+.face-registration-btn {
+  font-size: 18px;
+  font-weight: 600;
+  padding: 16px 48px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gradient-2) 100%);
+  border: none;
+  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  transition: all 0.3s ease;
+  display: inline-block;
+  text-decoration: none;
+}
+
+.face-registration-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(99, 102, 241, 0.5);
+}
+
+.face-registration-btn:active {
+  transform: translateY(0);
+}
+
+.payment-actions {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.payment-actions .btn {
+  flex: 1;
+  max-width: 200px;
+  text-align: center;
+}
+
+@media (max-width: 768px) {
+  .payment-success {
+    padding: 32px 16px;
+  }
+
+  .success-icon {
+    width: 64px;
+    height: 64px;
+    font-size: 36px;
+  }
+
+  .payment-success h2 {
+    font-size: 24px;
+  }
+
+  .payment-item-header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .payment-id-section {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .payment-info-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-item-amount-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .amount-value {
+    font-size: 20px;
+  }
+
+  .total-amount {
+    font-size: 24px;
+  }
+
+  .face-registration-title {
+    font-size: 22px;
+  }
+
+  .face-registration-icon {
+    font-size: 48px;
+  }
+
+  .face-registration-btn {
+    font-size: 16px;
+    padding: 14px 32px;
+    width: 100%;
+  }
+
+  .payment-actions {
+    flex-direction: column;
+  }
+
+  .payment-actions .btn {
+    max-width: 100%;
+  }
+}
+
+/* ==================== 블록체인 로딩 애니메이션 ==================== */
+.blockchain-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.blockchain-loading-modal {
+  background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+  border: 2px solid var(--accent);
+  border-radius: 24px;
+  padding: 48px 40px;
+  max-width: 500px;
+  width: 90%;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(99, 102, 241, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.blockchain-loading-modal::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    45deg,
+    transparent,
+    rgba(99, 102, 241, 0.1),
+    transparent
+  );
+  animation: rotate 3s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.blockchain-loader {
+  margin-bottom: 32px;
+  position: relative;
+  z-index: 1;
+}
+
+.blockchain-chain {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+}
+
+.blockchain-chain .block {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gradient-2) 100%);
+  border-radius: 8px;
+  position: relative;
+  animation: blockPulse 1.5s ease-in-out infinite;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.blockchain-chain .block::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+}
+
+.blockchain-chain .block:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.blockchain-chain .block:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.blockchain-chain .block:nth-child(3) {
+  animation-delay: 0.4s;
+  transform: scale(1.2);
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.6);
+}
+
+.blockchain-chain .block:nth-child(4) {
+  animation-delay: 0.6s;
+}
+
+.blockchain-chain .block:nth-child(5) {
+  animation-delay: 0.8s;
+}
+
+@keyframes blockPulse {
+  0%, 100% {
+    transform: translateY(0) scale(1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 1;
+  }
+}
+
+.blockchain-loading-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 16px;
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--gradient-2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.blockchain-loading-message {
+  font-size: 16px;
+  color: var(--muted);
+  margin: 0 0 32px;
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+.blockchain-progress {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.blockchain-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--gradient-2) 50%, var(--gradient-3) 100%);
+  background-size: 200% 100%;
+  border-radius: 2px;
+  animation: progressFlow 2s ease-in-out infinite;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+}
+
+@keyframes progressFlow {
+  0% {
+    width: 0%;
+    background-position: 0% 50%;
+  }
+  50% {
+    width: 70%;
+    background-position: 100% 50%;
+  }
+  100% {
+    width: 100%;
+    background-position: 0% 50%;
+  }
+}
+
+/* 블록체인 연결선 애니메이션 */
+.blockchain-chain::before,
+.blockchain-chain::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 20px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  animation: connectFlow 1s ease-in-out infinite;
+}
+
+.blockchain-chain::before {
+  left: calc(50% - 60px);
+}
+
+.blockchain-chain::after {
+  right: calc(50% - 60px);
+}
+
+@keyframes connectFlow {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scaleX(0.5);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .blockchain-loading-modal {
+    padding: 32px 24px;
+    max-width: 90%;
+  }
+
+  .blockchain-loading-title {
+    font-size: 20px;
+  }
+
+  .blockchain-loading-message {
+    font-size: 14px;
+  }
+
+  .blockchain-chain .block {
+    width: 32px;
+    height: 32px;
+  }
+
+  .blockchain-chain {
+    gap: 8px;
+  }
+}
+
 

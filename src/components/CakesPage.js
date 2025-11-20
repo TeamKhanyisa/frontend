@@ -18,6 +18,24 @@ const CakesPage = () => {
 
   const filterTabs = ['전체', '생일케이크', '웨딩케이크', '디저트'];
 
+  // 상품 이미지 가져오기 함수 (이미지가 없을 경우 기본 이미지 사용)
+  const getProductImage = (product) => {
+    // 이미지가 있으면 사용
+    if (product.image) {
+      return product.image;
+    }
+    
+    // 이미지가 없으면 상품 ID에 따라 기본 이미지 사용
+    if (product.id === 1) {
+      return '/images/strawberry-cake.svg'; // 딸기 케이크
+    } else if (product.id === 2) {
+      return '/images/chocolate-cake.svg'; // 초코 케이크
+    }
+    
+    // 그 외의 경우 플레이스홀더 이미지 사용
+    return '/images/placeholder.svg';
+  };
+
   // 백엔드에서 상품 목록 가져오기 (쿠키 자동 포함)
   useEffect(() => {
     const fetchProducts = async () => {
@@ -111,16 +129,16 @@ const CakesPage = () => {
       <div style={{ position: 'fixed', bottom: '24px', right: '24px', zIndex: 1000 }}>
         <Link
           to="/cart"
-          className="relative bg-pink-600 hover:bg-pink-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 group"
+          className="cart-fab"
           title="장바구니"
         >
-          <span className="text-xl">🛒</span>
+          <span className="cart-fab-icon">🛒</span>
           {getTotalItems() > 0 && (
-            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-6 h-6 flex items-center justify-center font-bold animate-pulse">
+            <span className="cart-fab-badge">
               {getTotalItems()}
             </span>
           )}
-          <div className="absolute right-full top-1/2 transform -translate-y-1/2 mr-2 bg-gray-800 text-white px-2 py-1 rounded text-sm opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+          <div className="cart-fab-tooltip">
             장바구니 ({getTotalItems()}개)
           </div>
         </Link>
@@ -209,7 +227,21 @@ const CakesPage = () => {
                   onClick={() => navigate(`/product/${product.id}`)}
                   style={{ cursor: 'pointer' }}
                 >
-                  <img src={product.image} alt={product.name} loading="lazy" />
+                  <img 
+                    src={getProductImage(product)} 
+                    alt={product.name} 
+                    loading="lazy"
+                    onError={(e) => {
+                      // 이미지 로드 실패 시 기본 이미지로 대체
+                      if (product.id === 1) {
+                        e.target.src = '/images/strawberry-cake.svg';
+                      } else if (product.id === 2) {
+                        e.target.src = '/images/chocolate-cake.svg';
+                      } else {
+                        e.target.src = '/images/placeholder.svg';
+                      }
+                    }}
+                  />
                   {product.badge && (
                     <div className={`product-badge ${product.badge === 'NEW' ? 'new' : ''}`}>
                       {product.badge}
@@ -230,8 +262,8 @@ const CakesPage = () => {
                   </div>
                   <div className="product-price">
                     <span className="price">₩{formatPrice(product.price)}</span>
-                    {product.originalPrice && (
-                      <span className="original-price">₩{formatPrice(product.originalPrice)}</span>
+                    {(product.originalPrice || product.original_price) && (
+                      <span className="original-price">₩{formatPrice(product.originalPrice || product.original_price)}</span>
                     )}
                   </div>
                   <button 

@@ -49,15 +49,19 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // httpOnly 쿠키 자동 포함
 });
 
 // 요청 인터셉터 (JWT 토큰 추가)
+// httpOnly 쿠키를 사용하더라도, localStorage에 토큰이 있으면 Authorization 헤더로도 전송
+// 이중 인증 방식: 쿠키(자동) + JWT 헤더(선택적)
 axiosInstance.interceptors.request.use(
   (config) => {
     const accessToken = tokenManager.getAccessToken();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
     }
+    // httpOnly 쿠키는 withCredentials: true로 자동 전송됨
     return config;
   },
   (error) => Promise.reject(error)
@@ -165,6 +169,32 @@ export const authAPI = {
     const response = await axiosInstance.post('/api/auth/request-role-change');
     return response.data;
   },
+
+  // 공개키 전송 (암호화용)
+  sendPublicKey: async (publicKeyPEM) => {
+    // PEM 형식에서 순수 Base64 문자열만 추출
+    // 헤더(-----BEGIN PUBLIC KEY-----), 푸터(-----END PUBLIC KEY-----), 개행문자(\n) 및 모든 공백 제거
+    const publicKeyBase64 = publicKeyPEM
+      .replace(/-----BEGIN PUBLIC KEY-----/g, '')
+      .replace(/-----END PUBLIC KEY-----/g, '')
+      .replace(/\n/g, '') // 개행 문자 제거
+      .replace(/\r/g, '') // 캐리지 리턴 제거
+      .replace(/\s/g, ''); // 모든 공백 문자 제거 (공백, 탭 등)
+    
+    const response = await axiosInstance.put('/api/auth/public-key', {
+      publicKey: publicKeyBase64,
+    });
+    return response.data;
+  },
+
+  // 서명용 공개키 전송
+  sendSigningPublicKey: async (publicKeyBase64) => {
+    // 이미 Base64 형식으로 받음 (getOrGenerateSigningKeyPair에서 변환됨)
+    const response = await axiosInstance.put('/api/auth/signing-public-key', {
+      publicKey: publicKeyBase64,
+    });
+    return response.data;
+  },
 };
 
 // ==================== 상품 관련 API ====================
@@ -176,7 +206,6 @@ export const productAPI = {
       page = 1,
       limit = 20,
       category,
-      subCategory,
       minPrice,
       maxPrice,
       search,
@@ -193,7 +222,6 @@ export const productAPI = {
       sortOrder,
       isActive,
       ...(category && { category }),
-      ...(subCategory && { subCategory }),
       ...(minPrice !== undefined && { minPrice }),
       ...(maxPrice !== undefined && { maxPrice }),
       ...(search && { search }),
@@ -215,7 +243,7 @@ export const productAPI = {
   // 카테고리 목록 조회
   getCategories: async () => {
     const response = await axiosInstance.get('/api/products/categories/list');
-    // 백엔드 응답 구조: { success: true, data: { categories: [...], subCategories: [...] } }
+    // 백엔드 응답 구조: { success: true, data: { categories: [...] } }
     return response.data.data;
   },
 
@@ -225,7 +253,8 @@ export const productAPI = {
       params: { limit },
     });
     // 백엔드 응답 구조: { success: true, data: products }
-    return response.data.data || [];
+    // products는 배열이므로 직접 반환
+    return Array.isArray(response.data.data) ? response.data.data : [];
   },
 
   // 상품 등록
@@ -292,6 +321,89 @@ export const qrAPI = {
       qrData: data,
     });
     return response.data;
+  },
+};
+
+// ==================== 결제 관련 API ====================
+
+export const paymentAPI = {
+  // 결제 생성
+  createPayment: async (paymentData) => {
+    const response = await axiosInstance.post('/api/payment/create', paymentData);
+    // 백엔드 응답 구조: { success: true, data: payment }
+    return response.data.data;
+  },
+
+  // 결제 상태 조회
+  getPayment: async (paymentId) => {
+    const response = await axiosInstance.get(`/api/payment/get/${paymentId}`);
+    // 백엔드 응답 구조: { success: true, data: payment }
+    return response.data.data;
+  },
+
+  // 사용자 결제 내역 조회 (페이지네이션 없음)
+  getMyPayments: async (params = {}) => {
+    const {
+      status,
+    } = params;
+
+    const queryParams = {
+      ...(status && { status }),
+    };
+
+    const response = await axiosInstance.get('/api/payment/my', {
+      params: queryParams,
+    });
+    // 백엔드 응답 구조: { success: true, data: { payments: [...], pagination: {...} } }
+    return response.data.data;
+  },
+
+  // QR 인증
+  verifyQR: async (verifyData) => {
+    const response = await axiosInstance.post('/api/payment/verify', verifyData);
+    // 백엔드 응답 구조: { success: true, message: '...', data: {...} }
+    return response.data;
+  },
+};
+
+// ==================== 관리자 결제 관련 API ====================
+
+export const adminPaymentAPI = {
+  // 성공한 결제 목록 조회 (관리자만)
+  getSuccessfulPayments: async (params = {}) => {
+    const {
+      page = 1,
+      limit = 20,
+      startDate,
+      endDate,
+      sortBy = 'createdAt',
+      sortOrder = 'desc',
+    } = params;
+
+    const queryParams = {
+      page,
+      limit,
+      sortBy,
+      sortOrder,
+      ...(startDate && { startDate }),
+      ...(endDate && { endDate }),
+    };
+
+    const response = await axiosInstance.get('/api/payment/admin/list', {
+      params: queryParams,
+    });
+    // 백엔드 응답 구조: { success: true, data: { payments: [...], pagination: {...} } }
+    return response.data.data;
+  },
+
+  // 상자번호 업데이트 (관리자만)
+  updateBoxNumber: async (paymentId, boxNumber) => {
+    const response = await axiosInstance.put('/api/payment/admin/update-box', {
+      paymentId,
+      boxNumber,
+    });
+    // 백엔드 응답 구조: { success: true, message: '...', data: payment }
+    return response.data.data;
   },
 };
 

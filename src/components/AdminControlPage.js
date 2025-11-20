@@ -6,29 +6,12 @@ import { useAuth } from '../contexts/AuthContext';
 const AdminControlPage = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const [pendingRequests, setPendingRequests] = useState([
-    {
-      id: 1,   
-      type: 'QR 체크인 요청',
-      requester: '김고객님',
-      time: '2분 전',
-      status: 'urgent',
-      statusText: '긴급'
-    },
-    {
-      id: 2,
-      type: '얼굴등록 요청',
-      requester: '이고객님',
-      time: '5분 전',
-      status: 'normal',
-      statusText: '일반'
-    }
-  ]);
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   const [systemStatus, setSystemStatus] = useState({
     qrScanner: 'online',
     faceRecognition: 'online',
-    pendingCount: 2
+    pendingCount: 0
   });
 
   const handleApprove = (requestId) => {

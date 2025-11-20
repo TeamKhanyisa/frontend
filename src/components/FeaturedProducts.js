@@ -13,9 +13,7 @@ const FeaturedProducts = () => {
       try {
         setLoading(true);
         const data = await productAPI.getFeaturedProducts(4);
-        if (data && data.data) {
-          setFeaturedProducts(data.data);
-        } else if (Array.isArray(data)) {
+        if (Array.isArray(data)) {
           setFeaturedProducts(data);
         }
       } catch (error) {
@@ -75,6 +73,27 @@ const FeaturedProducts = () => {
     return new Intl.NumberFormat('ko-KR').format(price);
   };
 
+  // 상품 이미지 가져오기 함수 (이미지가 없을 경우 기본 이미지 사용)
+  const getProductImage = (product) => {
+    // 이미지가 있으면 사용
+    if (product.image) {
+      return product.image;
+    }
+    if (product.images && product.images.length > 0) {
+      return product.images[0];
+    }
+    
+    // 이미지가 없으면 상품 ID에 따라 기본 이미지 사용
+    if (product.id === 1) {
+      return '/images/strawberry-cake.svg'; // 딸기 케이크
+    } else if (product.id === 2) {
+      return '/images/chocolate-cake.svg'; // 초코 케이크
+    }
+    
+    // 그 외의 경우 플레이스홀더 이미지 사용
+    return '/images/placeholder.svg';
+  };
+
   return (
     <section className="card featured-section">
       <div className="section-header">
@@ -101,7 +120,21 @@ const FeaturedProducts = () => {
               onClick={() => navigate(`/product/${product.id}`)}
             >
               <div className="featured-product-image">
-                <img src={product.image || product.images?.[0]} alt={product.name} loading="lazy" />
+                <img 
+                  src={getProductImage(product)} 
+                  alt={product.name} 
+                  loading="lazy"
+                  onError={(e) => {
+                    // 이미지 로드 실패 시 기본 이미지로 대체
+                    if (product.id === 1) {
+                      e.target.src = '/images/strawberry-cake.svg';
+                    } else if (product.id === 2) {
+                      e.target.src = '/images/chocolate-cake.svg';
+                    } else {
+                      e.target.src = '/images/placeholder.svg';
+                    }
+                  }}
+                />
                 {product.badge && (
                   <div className={`featured-product-badge ${product.badge === 'NEW' ? 'new' : ''}`}>
                     {product.badge}
@@ -120,8 +153,8 @@ const FeaturedProducts = () => {
                 <p className="featured-product-description">{product.description}</p>
                 <div className="featured-product-price">
                   <span className="price">₩{formatPrice(product.price)}</span>
-                  {product.originalPrice && (
-                    <span className="original-price">₩{formatPrice(product.originalPrice)}</span>
+                  {(product.originalPrice || product.original_price) && (
+                    <span className="original-price">₩{formatPrice(product.originalPrice || product.original_price)}</span>
                   )}
                 </div>
               </div>

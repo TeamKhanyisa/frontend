@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI, tokenManager } from '../utils/api';
+import { clearAllPrivateKeys } from '../utils/crypto';
 
 const AuthContext = createContext(null);
 
@@ -58,12 +59,22 @@ export const AuthProvider = ({ children }) => {
         // sessionStorage가 없는 경우 무시
       }
       
+      // 3. 모든 개인키 삭제 (암호화용 + 서명용)
+      // localStorage에서 삭제 (동기적 작업이므로 즉시 완료)
+      try {
+        await clearAllPrivateKeys();
+        console.log('개인키 삭제 완료 확인');
+      } catch (error) {
+        console.error('개인키 삭제 오류:', error);
+        // 개인키 삭제 실패해도 로그아웃은 진행
+      }
+      
       // 상태 초기화
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
       
-      // 3. 메인 페이지로 이동
+      // 4. 메인 페이지로 이동 (개인키 삭제 완료 후)
       // 카카오 로그아웃 URL 리다이렉트 제거 (KOE003 오류 방지)
       // 백엔드에서 이미 카카오 REST API로 로그아웃 처리됨
       window.location.href = '/';

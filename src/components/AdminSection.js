@@ -40,6 +40,16 @@ const AdminSection = () => {
         </svg>
       ),
       label: '원격 제어'
+    },
+    {
+      to: '/admin-payment',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+          <path d="M3 4h14M3 8h14M3 12h14M3 16h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M6 2v4M14 2v4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      ),
+      label: '결제 관리'
     }
   ];
 

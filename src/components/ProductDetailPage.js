@@ -4,6 +4,7 @@ import { useCart } from '../contexts/CartContext';
 import Background from './Background';
 import { useToast } from '../hooks/useToast';
 import ToastContainer from './ToastContainer';
+import { productAPI } from '../utils/api';
 
 const ProductDetailPage = () => {
   const { id } = useParams();
@@ -16,151 +17,41 @@ const ProductDetailPage = () => {
   const [selectedSize, setSelectedSize] = useState('1호 (4-6인분)');
   const [selectedFlavor, setSelectedFlavor] = useState('딸기');
   const [quantity, setQuantity] = useState(1);
-  const [selectedImage, setSelectedImage] = useState(0);
   const [activeTab, setActiveTab] = useState('info');
 
-  // 샘플 상품 데이터
-  const sampleProducts = {
-    1: {
-      id: 1,
-      name: '딸기 생크림 케이크',
-      price: 35000,
-      originalPrice: 42000,
-      discount: 17,
-      rating: 4.9,
-      reviewCount: 127,
-      description: '신선한 딸기와 부드러운 생크림의 완벽한 조화를 이룬 프리미엄 케이크입니다. 매일 아침 수확한 딸기와 정성스럽게 휘핑한 생크림으로 만들어져 더욱 신선하고 맛있습니다.',
-      images: [
-        '/images/strawberry-cake.svg',
-        '/images/strawberry-cake.svg',
-        '/images/strawberry-cake.svg',
-        '/images/strawberry-cake.svg'
-      ],
-      features: [
-        { icon: '🍓', title: '신선한 딸기', desc: '매일 아침 수확한 신선한 딸기 사용' },
-        { icon: '🥛', title: '프리미엄 생크림', desc: '정성스럽게 휘핑한 고급 생크림' },
-        { icon: '🏠', title: '수제 제작', desc: '경험 많은 셰프의 손으로 정성스럽게 제작' }
-      ],
-      details: {
-        ingredients: '딸기, 생크림, 밀가루, 설탕, 계란, 버터',
-        allergens: '밀, 계란, 우유 함유',
-        storage: '냉장 보관, 3일 이내 섭취 권장',
-        manufacturing: '주문일 기준 당일 제작'
-      },
-      nutrition: {
-        calories: '320kcal',
-        carbs: '45g',
-        protein: '6g',
-        fat: '12g'
-      }
-    },
-    2: {
-      id: 2,
-      name: '초콜릿 무스 케이크',
-      price: 45000,
-      originalPrice: 50000,
-      discount: 10,
-      rating: 4.8,
-      reviewCount: 89,
-      description: '진한 초콜릿의 깊은 맛과 부드러운 무스의 조화를 이룬 프리미엄 케이크입니다.',
-      images: [
-        '/images/chocolate-cake.svg',
-        '/images/chocolate-cake.svg',
-        '/images/chocolate-cake.svg',
-        '/images/chocolate-cake.svg'
-      ],
-      features: [
-        { icon: '🍫', title: '프리미엄 초콜릿', desc: '벨기에산 고급 초콜릿 사용' },
-        { icon: '🥛', title: '부드러운 무스', desc: '정성스럽게 휘핑한 초콜릿 무스' },
-        { icon: '🏠', title: '수제 제작', desc: '경험 많은 셰프의 손으로 정성스럽게 제작' }
-      ],
-      details: {
-        ingredients: '초콜릿, 생크림, 밀가루, 설탕, 계란, 버터',
-        allergens: '밀, 계란, 우유, 견과류 함유',
-        storage: '냉장 보관, 3일 이내 섭취 권장',
-        manufacturing: '주문일 기준 당일 제작'
-      },
-      nutrition: {
-        calories: '380kcal',
-        carbs: '42g',
-        protein: '8g',
-        fat: '18g'
-      }
-    },
-    3: {
-      id: 3,
-      name: '뉴욕 치즈케이크',
-      price: 28000,
-      originalPrice: 32000,
-      discount: 12,
-      rating: 4.7,
-      reviewCount: 156,
-      description: '뉴욕 스타일의 진한 치즈케이크로 부드럽고 진한 맛을 자랑합니다.',
-      images: [
-        '/images/cheesecake.svg',
-        '/images/cheesecake.svg',
-        '/images/cheesecake.svg',
-        '/images/cheesecake.svg'
-      ],
-      features: [
-        { icon: '🧀', title: '프리미엄 치즈', desc: '뉴욕산 고급 크림치즈 사용' },
-        { icon: '🍪', title: '바삭한 크러스트', desc: '정성스럽게 만든 그레이엄 크래커' },
-        { icon: '🏠', title: '수제 제작', desc: '경험 많은 셰프의 손으로 정성스럽게 제작' }
-      ],
-      details: {
-        ingredients: '크림치즈, 그레이엄 크래커, 설탕, 계란, 버터',
-        allergens: '밀, 계란, 우유 함유',
-        storage: '냉장 보관, 5일 이내 섭취 권장',
-        manufacturing: '주문일 기준 당일 제작'
-      },
-      nutrition: {
-        calories: '350kcal',
-        carbs: '38g',
-        protein: '10g',
-        fat: '15g'
-      }
-    },
-    4: {
-      id: 4,
-      name: '클래식 티라미수',
-      price: 32000,
-      originalPrice: 38000,
-      discount: 16,
-      rating: 4.9,
-      reviewCount: 203,
-      description: '이탈리아 전통 레시피로 만든 진짜 티라미수입니다.',
-      images: [
-        '/images/tiramisu.svg',
-        '/images/tiramisu.svg',
-        '/images/tiramisu.svg',
-        '/images/tiramisu.svg'
-      ],
-      features: [
-        { icon: '☕', title: '프리미엄 커피', desc: '이탈리아산 에스프레소 사용' },
-        { icon: '🧀', title: '마스카포네 치즈', desc: '정성스럽게 휘핑한 마스카포네' },
-        { icon: '🏠', title: '수제 제작', desc: '경험 많은 셰프의 손으로 정성스럽게 제작' }
-      ],
-      details: {
-        ingredients: '마스카포네, 에스프레소, 레이디핑거, 설탕, 계란',
-        allergens: '밀, 계란, 우유, 알코올 함유',
-        storage: '냉장 보관, 4일 이내 섭취 권장',
-        manufacturing: '주문일 기준 당일 제작'
-      },
-      nutrition: {
-        calories: '290kcal',
-        carbs: '35g',
-        protein: '7g',
-        fat: '14g'
-      }
-    }
-  };
-
+  // 백엔드에서 상품 정보 가져오기
   useEffect(() => {
-    const productId = parseInt(id);
-    if (sampleProducts[productId]) {
-      setProduct(sampleProducts[productId]);
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const productData = await productAPI.getProduct(id);
+        
+        if (productData) {
+          // 이미지가 없을 경우 기본 이미지 설정
+          const productImage = productData.image || (productData.id === 1 
+            ? '/images/strawberry-cake.svg' 
+            : productData.id === 2 
+            ? '/images/chocolate-cake.svg' 
+            : '/images/placeholder.svg');
+          
+          // 백엔드 데이터를 프론트엔드 형식에 맞게 변환
+          setProduct({
+            ...productData,
+            image: productImage,
+            originalPrice: productData.originalPrice || productData.original_price,
+            discount: productData.discountPercentage || 0,
+          });
+        }
+      } catch (error) {
+        console.error('상품 정보 조회 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchProduct();
     }
-    setLoading(false);
   }, [id]);
 
   const handleQuantityChange = (change) => {
@@ -242,35 +133,35 @@ const ProductDetailPage = () => {
         <section className="product-detail">
           <div className="product-gallery">
             <div className="main-image">
-              <img src={product.images[selectedImage]} alt={product.name} />
-              <div className="product-badge">BEST</div>
-              <button className="btn-icon gallery-zoom">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                  <path d="M19 19l-4.35-4.35M17 9A8 8 0 1 1 1 9a8 8 0 0 1 16 0z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              </button>
-            </div>
-            <div className="thumbnail-gallery">
-              {product.images.map((image, index) => (
-                <div 
-                  key={index}
-                  className={`thumbnail ${selectedImage === index ? 'active' : ''}`}
-                  onClick={() => setSelectedImage(index)}
-                >
-                  <img src={image} alt={`${product.name} ${index + 1}`} />
-                </div>
-              ))}
+              <img 
+                src={product.image || '/images/placeholder.svg'} 
+                alt={product.name}
+                onError={(e) => {
+                  // 이미지 로드 실패 시 기본 이미지로 대체
+                  if (product.id === 1) {
+                    e.target.src = '/images/strawberry-cake.svg';
+                  } else if (product.id === 2) {
+                    e.target.src = '/images/chocolate-cake.svg';
+                  } else {
+                    e.target.src = '/images/placeholder.svg';
+                  }
+                }}
+              />
+              {(product.isFeatured || product.is_featured) && (
+                <div className="product-badge">BEST</div>
+              )}
             </div>
           </div>
 
           <div className="product-info">
             <div className="product-header">
               <h1 className="product-title">{product.name}</h1>
-              <div className="product-rating">
-                <div className="stars">★★★★★</div>
-                <span className="rating-text">{product.rating} ({product.reviewCount}개 리뷰)</span>
-                <a href="#reviews" className="review-link">리뷰 보기</a>
-              </div>
+              {(product.isFeatured || product.is_featured) && (
+                <div className="product-rating">
+                  <div className="stars">★★★★★</div>
+                  <span className="rating-text">인기 상품</span>
+                </div>
+              )}
             </div>
 
             <div className="product-description">
@@ -311,8 +202,12 @@ const ProductDetailPage = () => {
             <div className="product-price-section">
               <div className="price-info">
                 <span className="current-price">₩{formatPrice(product.price)}</span>
-                <span className="original-price">₩{formatPrice(product.originalPrice)}</span>
-                <span className="discount-badge">{product.discount}% 할인</span>
+                {((product.originalPrice || product.original_price) && (product.originalPrice || product.original_price) > product.price) && (
+                  <>
+                    <span className="original-price">₩{formatPrice(product.originalPrice || product.original_price)}</span>
+                    <span className="discount-badge">{product.discountPercentage || Math.round(((product.originalPrice || product.original_price) - product.price) / (product.originalPrice || product.original_price) * 100)}% 할인</span>
+                  </>
+                )}
               </div>
               <div className="delivery-info">
                 <div className="delivery-item">
@@ -368,15 +263,27 @@ const ProductDetailPage = () => {
             </div>
 
             <div className="product-features">
-              {product.features.map((feature, index) => (
-                <div key={index} className="feature-item">
-                  <div className="feature-icon">{feature.icon}</div>
-                  <div className="feature-text">
-                    <h4>{feature.title}</h4>
-                    <p>{feature.desc}</p>
-                  </div>
+              <div className="feature-item">
+                <div className="feature-icon">🍰</div>
+                <div className="feature-text">
+                  <h4>신선한 재료</h4>
+                  <p>매일 아침 신선한 재료로 제작합니다</p>
                 </div>
-              ))}
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">🏠</div>
+                <div className="feature-text">
+                  <h4>수제 제작</h4>
+                  <p>경험 많은 셰프의 손으로 정성스럽게 제작합니다</p>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">📦</div>
+                <div className="feature-text">
+                  <h4>무인 매장</h4>
+                  <p>24시간 언제든지 주문 가능합니다</p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -394,7 +301,7 @@ const ProductDetailPage = () => {
               className={`tab-btn ${activeTab === 'reviews' ? 'active' : ''}`}
               onClick={() => setActiveTab('reviews')}
             >
-              리뷰 ({product.reviewCount})
+              리뷰
             </button>
             <button 
               className={`tab-btn ${activeTab === 'shipping' ? 'active' : ''}`}
@@ -416,43 +323,26 @@ const ProductDetailPage = () => {
                 <h3>상품 상세 정보</h3>
                 <div className="detail-grid">
                   <div className="detail-item">
-                    <span className="detail-label">원재료</span>
-                    <span className="detail-value">{product.details.ingredients}</span>
+                    <span className="detail-label">카테고리</span>
+                    <span className="detail-value">{product.category}</span>
                   </div>
                   <div className="detail-item">
-                    <span className="detail-label">알레르기 정보</span>
-                    <span className="detail-value">{product.details.allergens}</span>
+                    <span className="detail-label">재고</span>
+                    <span className="detail-value">{product.stock}개</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">보관 방법</span>
-                    <span className="detail-value">{product.details.storage}</span>
+                    <span className="detail-value">냉장 보관, 3일 이내 섭취 권장</span>
                   </div>
                   <div className="detail-item">
                     <span className="detail-label">제조일</span>
-                    <span className="detail-value">{product.details.manufacturing}</span>
+                    <span className="detail-value">주문일 기준 당일 제작</span>
                   </div>
                 </div>
                 
                 <div className="nutrition-info">
-                  <h4>영양 정보 (100g 기준)</h4>
-                  <div className="nutrition-grid">
-                    <div className="nutrition-item">
-                      <span>칼로리</span>
-                      <span>{product.nutrition.calories}</span>
-                    </div>
-                    <div className="nutrition-item">
-                      <span>탄수화물</span>
-                      <span>{product.nutrition.carbs}</span>
-                    </div>
-                    <div className="nutrition-item">
-                      <span>단백질</span>
-                      <span>{product.nutrition.protein}</span>
-                    </div>
-                    <div className="nutrition-item">
-                      <span>지방</span>
-                      <span>{product.nutrition.fat}</span>
-                    </div>
-                  </div>
+                  <h4>상품 설명</h4>
+                  <p>{product.description}</p>
                 </div>
               </div>
             )}

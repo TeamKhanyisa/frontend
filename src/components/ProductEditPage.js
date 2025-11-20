@@ -18,6 +18,7 @@ const ProductEditPage = () => {
     name: '딸기 생크림 케이크',
     category: 'birthday',
     price: '35000',
+    originalPrice: '',
     stock: '15',
     description: '신선한 딸기와 부드러운 생크림의 완벽한 조화'
   });
@@ -61,6 +62,7 @@ const ProductEditPage = () => {
               name: product.name || '',
               category: product.category || 'birthday',
               price: product.price?.toString() || '',
+              originalPrice: (product.originalPrice || product.original_price)?.toString() || '',
               stock: product.stock?.toString() || '',
               description: product.description || ''
             });
@@ -114,6 +116,9 @@ const ProductEditPage = () => {
       productData.append('name', formData.name);
       productData.append('category', formData.category);
       productData.append('price', formData.price);
+      if (formData.originalPrice) {
+        productData.append('originalPrice', formData.originalPrice);
+      }
       productData.append('stock', formData.stock);
       productData.append('description', formData.description);
       
@@ -231,6 +236,19 @@ const ProductEditPage = () => {
                   required 
                 />
               </div>
+              <div className="form-group">
+                <label className="form-label">원가 (할인 표시용, 선택사항)</label>
+                <input 
+                  type="number" 
+                  className="form-input" 
+                  name="originalPrice"
+                  value={formData.originalPrice}
+                  onChange={handleChange}
+                  placeholder="할인 전 가격"
+                />
+              </div>
+            </div>
+            <div className="form-row">
               <div className="form-group">
                 <label className="form-label">재고 수량</label>
                 <input 

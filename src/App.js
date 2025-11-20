@@ -12,8 +12,10 @@ import ProductRegisterPage from './components/ProductRegisterPage';
 import ProductEditPage from './components/ProductEditPage';
 import ProductDeletePage from './components/ProductDeletePage';
 import AdminControlPage from './components/AdminControlPage';
+import AdminPaymentPage from './components/AdminPaymentPage';
 import OAuthCallback from './components/OAuthCallback';
 import LogoutCallback from './components/LogoutCallback';
+import PaymentCompletePage from './components/PaymentCompletePage';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
               <Route path="/product-edit/:id" element={<ProductEditPage />} />
               <Route path="/product-delete" element={<ProductDeletePage />} />
               <Route path="/admin-control" element={<AdminControlPage />} />
+              <Route path="/admin-payment" element={<AdminPaymentPage />} />
+              <Route path="/payment-complete" element={<PaymentCompletePage />} />
               <Route path="/auth/callback" element={<OAuthCallback />} />
               <Route path="/auth/logout-callback" element={<LogoutCallback />} />
             </Routes>

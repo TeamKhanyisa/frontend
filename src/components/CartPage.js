@@ -1,15 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Background from './Background';
 import { useCart } from '../contexts/CartContext';
 import { useToast } from '../hooks/useToast';
+import { useAuth } from '../contexts/AuthContext';
+import { paymentAPI } from '../utils/api';
+import { signData } from '../utils/crypto';
 import ToastContainer from './ToastContainer';
 
 const CartPage = () => {
   const { items: cartItems, removeFromCart, updateQuantity, getTotalPrice, getTotalItems } = useCart();
   const { toasts, showSuccess, showError, removeToast } = useToast();
+  const { isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [selectedItems, setSelectedItems] = useState([]);
   const [paymentMethod, setPaymentMethod] = useState('card');
+  const [isProcessing, setIsProcessing] = useState(false);
 
   // cartItems가 변경될 때 selectedItems 업데이트
   useEffect(() => {
@@ -64,10 +70,102 @@ const CartPage = () => {
   const selectedTotal = getSelectedTotal();
   const finalPrice = selectedTotal;
 
+  const handleCheckout = async () => {
+    if (selectedItems.length === 0) {
+      showError('주문할 상품을 선택해주세요', 2500);
+      return;
+    }
+
+    if (!isAuthenticated) {
+      showError('로그인이 필요합니다', 2500);
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const selectedCartItems = cartItems.filter(item => selectedItems.includes(item.id));
+      const paymentResults = [];
+
+      // 선택된 각 상품에 대해 결제 생성
+      for (const item of selectedCartItems) {
+        // 결제 데이터 생성
+        const paymentData = {
+          productId: item.id,
+          quantity: item.quantity,
+          amount: item.price * item.quantity
+        };
+
+        // 개인키로 결제 데이터 서명
+        const signature = await signData(paymentData);
+
+        // 서명 콘솔 출력 (백엔드 전송 전)
+        console.log('=== 결제 서명 정보 ===');
+        console.log('결제 데이터:', paymentData);
+        console.log('서명 (Base64):', signature);
+        console.log('===================');
+
+        // 서명된 결제 정보를 요청 형식에 맞춰 구성
+        const signedPaymentRequest = {
+          paymentData: paymentData,
+          signature: signature
+        };
+
+        const result = await paymentAPI.createPayment(signedPaymentRequest);
+        paymentResults.push(result);
+      }
+
+      // 모든 결제가 성공하면 장바구니에서 선택된 아이템 제거
+      selectedItems.forEach(itemId => {
+        removeFromCart(itemId);
+      });
+
+      // 결제 완료 페이지로 이동 (결제 정보를 state로 전달)
+      navigate('/payment-complete', {
+        state: {
+          payments: paymentResults,
+          totalAmount: finalPrice
+        }
+      });
+    } catch (error) {
+      console.error('결제 처리 오류:', error);
+      const errorMessage = error.response?.data?.message || '결제 처리 중 오류가 발생했습니다';
+      showError(errorMessage, 3000);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
   return (
     <div className="App">
       <Background />
       <ToastContainer toasts={toasts} removeToast={removeToast} />
+      
+      {/* 블록체인 전파 로딩 모달 */}
+      {isProcessing && (
+        <div className="blockchain-loading-overlay">
+          <div className="blockchain-loading-modal">
+            <div className="blockchain-loader">
+              <div className="blockchain-chain">
+                <div className="block"></div>
+                <div className="block"></div>
+                <div className="block"></div>
+                <div className="block"></div>
+                <div className="block"></div>
+              </div>
+            </div>
+            <h2 className="blockchain-loading-title">블록체인에 전파 중...</h2>
+            <p className="blockchain-loading-message">
+              결제 정보를 블록체인 네트워크에 기록하고 있습니다.
+              <br />
+              잠시만 기다려주세요.
+            </p>
+            <div className="blockchain-progress">
+              <div className="blockchain-progress-bar"></div>
+            </div>
+          </div>
+        </div>
+      )}
       
       <main className="container">
         {/* Header Section */}
@@ -179,16 +277,10 @@ const CartPage = () => {
             
             <button 
               className="btn kakao-primary checkout-btn"
-              disabled={selectedItems.length === 0}
-              onClick={() => {
-                if (selectedItems.length === 0) {
-                  showError('주문할 상품을 선택해주세요', 2500);
-                } else {
-                  showSuccess('주문이 완료되었습니다! 🎉', 3000);
-                }
-              }}
+              disabled={selectedItems.length === 0 || isProcessing}
+              onClick={handleCheckout}
             >
-              주문하기
+              {isProcessing ? '결제 처리 중...' : '주문하기'}
             </button>
             
             <div className="payment-methods">
